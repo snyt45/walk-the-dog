@@ -21,12 +21,13 @@ lto = true
 [dependencies]
 # The `wasm-bindgen` crate provides the bare minimum functionality needed
 # to interact with JavaScript.
-wasm-bindgen = "0.2.78"
+wasm-bindgen = { version = "0.2.78", features = ["serde-serialize"] }
 console_error_panic_hook = "0.1.5"
 rand = "0.8.4"
 getrandom = { version = "0.2.3", features = ["js"]}
 futures = "0.3.18"
 wasm-bindgen-futures = "0.4.28"
+serde = { version = "1.0.131", features = ["derive"] }
 
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.
