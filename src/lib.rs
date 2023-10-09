@@ -45,30 +45,6 @@ pub fn main_js() -> Result<(), JsValue> {
         .unwrap();
 
     wasm_bindgen_futures::spawn_local(async move {
-        let image = web_sys::HtmlImageElement::new().unwrap();
-        let (success_tx, success_rx) = futures::channel::oneshot::channel::<Result<(), JsValue>>();
-        let success_tx = Rc::new(Mutex::new(Some(success_tx)));
-        let error_tx = Rc::clone(&success_tx);
-
-        let callback = Closure::once(move || {
-            if let Some(success_tx) = success_tx.lock().ok().and_then(|mut opt| opt.take()) {
-                success_tx.send(Ok(()));
-            }
-        });
-
-        let error_callback = Closure::once(move |err| {
-            if let Some(error_tx) = error_tx.lock().ok().and_then(|mut opt| opt.take()) {
-                error_tx.send(Err(err));
-            }
-        });
-
-        image.set_onload(Some(callback.as_ref().unchecked_ref()));
-        image.set_onerror(Some(error_callback.as_ref().unchecked_ref()));
-        image.set_src("Idle (1).png");
-
-        success_rx.await;
-        context.draw_image_with_html_image_element(&image, 0.0, 0.0);
-
         let json = fetch_json("rhb.json")
             .await
             .expect("Could not fetch rhb.json");
@@ -91,6 +67,7 @@ pub fn main_js() -> Result<(), JsValue> {
             }
         });
 
+        let image = web_sys::HtmlImageElement::new().unwrap();
         image.set_onload(Some(callback.as_ref().unchecked_ref()));
         image.set_onerror(Some(error_callback.as_ref().unchecked_ref()));
         image.set_src("rhb.png");
