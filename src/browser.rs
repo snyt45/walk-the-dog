@@ -1,10 +1,16 @@
 use anyhow::{anyhow, Result};
 use futures::Future;
-use wasm_bindgen::{closure::WasmClosureFnOnce, prelude::Closure, JsCast, JsValue};
+use wasm_bindgen::{
+    closure::{WasmClosure, WasmClosureFnOnce},
+    prelude::Closure,
+    JsCast, JsValue,
+};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
     CanvasRenderingContext2d, Document, HtmlCanvasElement, HtmlImageElement, Response, Window,
 };
+
+pub type LoopClosure = Closure<dyn FnMut(f64)>;
 
 macro_rules! log {
     ( $($t:tt)* ) => {
@@ -80,4 +86,18 @@ where
     F: 'static + WasmClosureFnOnce<A, R>,
 {
     Closure::once(fn_once)
+}
+
+pub fn request_animation_frame(callback: &LoopClosure) -> Result<i32> {
+    window()?
+        .request_animation_frame(callback.as_ref().unchecked_ref())
+        .map_err(|err| anyhow!("Cannot request animation fram {:#?}", err))
+}
+
+pub fn create_raf_closure(f: impl FnMut(f64) + 'static) -> LoopClosure {
+    closure_wrap(Box::new(f))
+}
+
+pub fn closure_wrap<T: WasmClosure + ?Sized>(data: Box<T>) -> Closure<T> {
+    Closure::wrap(data)
 }
